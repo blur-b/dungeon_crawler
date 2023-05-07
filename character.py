@@ -1,5 +1,6 @@
 class Character:
-    def __init__(self, hp=100, defense=0, damage=5, speed=5, width=0, height=0, x=0, y=0):
+    def __init__(self, sprite, hp=100, defense=0, damage=5, speed=5, width=0, height=0, x=0, y=0):
+        self.sprite = sprite
         self.hp = hp
         self.defense = defense
         self.damage = damage
@@ -8,6 +9,9 @@ class Character:
         self.height = height
         self.x = x
         self.y = y
+
+    def get_sprite(self):
+        return self.sprite
 
     def get_hp(self):
         return self.hp
@@ -32,6 +36,13 @@ class Character:
 
     def get_y(self):
         return self.y
+    
+    def set_sprite(self, sprite):
+        self.sprite = sprite
+
+    def set_hp(self, hp):
+        if hp >= 0:
+            self.hp = hp
 
     def set_x(self, x):
         self.x = x
@@ -40,8 +51,8 @@ class Character:
         self.y = y
 
 class Player(Character):
-    def __init__(self, width, height, stamina=100, num_arrows=0, x=0, y=0):
-        super().__init__(width=width, height=height, x=x, y=y)
+    def __init__(self, sprite, width, height, stamina=100, num_arrows=0, x=0, y=0):
+        super().__init__(sprite=sprite, width=width, height=height, x=x, y=y)
         self.stamina = stamina
         self.num_arrows = num_arrows
 
@@ -52,5 +63,5 @@ class Player(Character):
         return self.num_arrows
 
 class Slime(Character):
-    def __init__(self, width, height, hp=50, defense=1, damage=10, speed=2, x=0, y=0):
-        super().__init__(hp, defense, damage, speed, width, height, x, y)
+    def __init__(self, sprite, width, height, hp=50, defense=1, damage=10, speed=1, x=0, y=0):
+        super().__init__(sprite, hp, defense, damage, speed, width, height, x, y)
