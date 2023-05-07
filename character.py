@@ -44,6 +44,9 @@ class Character:
         if hp >= 0:
             self.hp = hp
 
+    def set_speed(self, speed):
+        self.speed = speed
+
     def set_x(self, x):
         self.x = x
 
@@ -51,16 +54,30 @@ class Character:
         self.y = y
 
 class Player(Character):
-    def __init__(self, sprite, width, height, stamina=100, num_arrows=0, x=0, y=0):
+    def __init__(self, sprite, width, height, base_speed=5, stamina=100, num_arrows=0, sprint=2, x=0, y=0):
         super().__init__(sprite=sprite, width=width, height=height, x=x, y=y)
+        self.base_speed = base_speed
         self.stamina = stamina
         self.num_arrows = num_arrows
+        self.sprint = sprint
+
+    def get_base_speed(self):
+        return self.base_speed
 
     def get_stamina(self):
         return self.stamina
 
     def get_num_arrows(self):
         return self.num_arrows
+    
+    def get_sprint(self):
+        return self.sprint
+    
+    def set_stamina(self, stamina):
+        if 0 <= stamina <= 100:
+            self.stamina = stamina
+        elif stamina > 100:
+            self.stamina = 100
 
 class Slime(Character):
     def __init__(self, sprite, width, height, hp=50, defense=1, damage=10, speed=1, x=0, y=0):

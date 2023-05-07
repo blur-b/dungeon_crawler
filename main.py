@@ -12,28 +12,37 @@ pygame.display.set_caption("Dungeon Crawler")
 PLAYER_WIDTH, PLAYER_HEIGHT = 80, 120
 SLIME_WIDTH = 80
 HP_WIDTH, HP_HEIGHT = 100, 20
+ST_WIDTH, ST_HEIGHT = 100, 20
 
 # load images
 BG = pygame.image.load("./assets/bkg.png")
 HP_BKG = pygame.image.load("./assets/player/hp_bkg.png")
 HP = pygame.image.load("./assets/player/hp.png")
+ST_BKG = pygame.image.load("./assets/player/st_bkg.png")
+ST = pygame.image.load("./assets/player/st.png")
 PLAYER_L = pygame.image.load("./assets/player/left.png")
 PLAYER_R = pygame.image.load("./assets/player/right.png")
 SLIME_L = pygame.image.load("./assets/slime/left.png")
 SLIME_R = pygame.image.load("./assets/slime/right.png")
 
 # text fonts
-STAT_FONT = pygame.font.SysFont("comicsans", 25)
+STAT_FONT = pygame.font.SysFont("comicsans", 15, bold=True)
 GG_FONT = pygame.font.SysFont("comicsans", 50)
 
 def draw_stats(player):
-    time_text = STAT_FONT.render(f"HP: {player.get_hp()}", 1, "white")
-    WIN.blit(time_text, (10, 10))
+    hp_text = STAT_FONT.render(f"HP: {player.get_hp()}", 1, "white")
+    st_text = STAT_FONT.render(f"ST: {player.get_stamina()}", 1, "white")
 
     hp = pygame.transform.scale(HP, (player.get_hp(), HP_HEIGHT))
+    st = pygame.transform.scale(ST, (player.get_stamina(), HP_HEIGHT))
     
-    WIN.blit(HP_BKG, (10, 50))
-    WIN.blit(hp, (10, 50))
+    WIN.blit(HP_BKG, (10, 10))
+    WIN.blit(hp, (10, 10))
+    WIN.blit(ST_BKG, (10, 40))
+    WIN.blit(st, (10, 40))
+
+    WIN.blit(hp_text, (11, 9))
+    WIN.blit(st_text, (11, 39))
 
 def draw(player, slime):
     WIN.blit(BG, (0, 0))
@@ -42,6 +51,32 @@ def draw(player, slime):
     draw_stats(player)
 
     pygame.display.update()
+
+def check_player_moved(keys):
+    return keys[pygame.K_a] or keys[pygame.K_d] or keys[pygame.K_w] or keys[pygame.K_s]
+
+def move_player(keys, player):
+    # sprint
+    if keys[pygame.K_LSHIFT] and player.get_stamina() > 0:
+        player.set_speed(player.get_base_speed() + player.get_sprint())
+    else:
+        player.set_speed(player.get_base_speed())
+
+    # basic wasd movement
+    if keys[pygame.K_a] and player.get_x() - player.get_speed() >= 0:
+        player_x = player.get_x() - player.get_speed()
+        player.set_x(player_x)
+        player.set_sprite(PLAYER_L)
+    if keys[pygame.K_d] and player.get_x() + player.get_speed() + player.get_width() <= WIDTH:
+        player_x = player.get_x() + player.get_speed()
+        player.set_x(player_x)
+        player.set_sprite(PLAYER_R)
+    if keys[pygame.K_w] and player.get_y() - player.get_speed() >= 0:
+        player_y = player.get_y() - player.get_speed()
+        player.set_y(player_y)
+    if keys[pygame.K_s] and player.get_y() + player.get_speed() + player.get_height() <= HEIGHT:
+        player_y = player.get_y() + player.get_speed()
+        player.set_y(player_y)
 
 def main():
     run = True
@@ -60,8 +95,14 @@ def main():
     slime_attack_event = pygame.USEREVENT + 1
     pygame.time.set_timer(slime_attack_event, slime_delay)
 
+    # sprint stamina drain
+    stamina_delay = 100
+    stamina_event = pygame.USEREVENT + 2
+    pygame.time.set_timer(stamina_event, stamina_delay)
+
     while run:
         clock.tick(60)
+        keys = pygame.key.get_pressed()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -74,23 +115,19 @@ def main():
                 player.set_hp(player_hp)
                 pygame.time.set_timer(slime_attack_event, slime_delay)
 
-        keys = pygame.key.get_pressed()
+            # stamina drain
+            if event.type == stamina_event and keys[pygame.K_LSHIFT] and check_player_moved(keys):
+                player_st = player.get_stamina() - 5
+                player.set_stamina(player_st)
+                pygame.time.set_timer(stamina_event, stamina_delay)
+            # stamina regen
+            elif event.type == stamina_event and not check_player_moved(keys):
+                player_st = player.get_stamina() + 2
+                player.set_stamina(player_st)
+                pygame.time.set_timer(stamina_event, stamina_delay)
 
         # player movement
-        if keys[pygame.K_LEFT] and player.get_x() - player.get_speed() >= 0:
-            player_x = player.get_x() - player.get_speed()
-            player.set_x(player_x)
-            player.set_sprite(PLAYER_L)
-        if keys[pygame.K_RIGHT] and player.get_x() + player.get_speed() + player.get_width() <= WIDTH:
-            player_x = player.get_x() + player.get_speed()
-            player.set_x(player_x)
-            player.set_sprite(PLAYER_R)
-        if keys[pygame.K_UP] and player.get_y() - player.get_speed() >= 0:
-            player_y = player.get_y() - player.get_speed()
-            player.set_y(player_y)
-        if keys[pygame.K_DOWN] and player.get_y() + player.get_speed() + player.get_height() <= HEIGHT:
-            player_y = player.get_y() + player.get_speed()
-            player.set_y(player_y)
+        move_player(keys, player)
 
         # slime movement
         if slime.get_x() < player.get_x():
